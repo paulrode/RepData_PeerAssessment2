@@ -1,16 +1,47 @@
 ---
-title: "R Notebook"
+title: "R Notebook Reproducible Research Peer Assessment 2"
 output: html_notebook
 ---
 
- 
 
-```{r}
-plot(cars)
+```{r, echo=FALSE, results="hide", include=FALSE}
+  # Enviroment 
+  # Loading and preprocessing the data
+  #Set up enviroment for R scrip  
+  # Packages for tidyverse 
+    library("tidyverse")
+    library("lubridate")
+  # Package for building tables in markdown and notebook 
+    library("knitr")
+    library("kableExtra") 
+    library("xtable")
+  # Package for forecasting
+    library("fpp2")
+  # Packages for reading excel and html files and XML
+    library("openxlsx")
+    library("XML")
+  # Parkage for using data tables for very large data operations
+    library("data.table")
+  #Package for reading fixed width tables
+    library("utils")
+  # Packages for reading data through API's 
+    library("httr")
+    library("jsonlite")
+  # Package for performing inquires with SQL databases 
+    library("sqldf")
+  #Package for reading and writing to jpeg files
+    library("jpeg")
+
+  # Set proper working Dir
+    if (!getwd() == "C:/Users/paulr/Documents/R/Coursera_ReproducibleResearch/RepData_PeerAssessment2") {setwd("C:/Users/paulr/Documents/R/Coursera_ReproducibleResearch/RepData_PeerAssessment2")}
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+ 
+# Read data 
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```{r, echo=TRUE, results=FALSE}
+stormdata <- read_csv("./data/repdata_data_StormData.csv.bz2", col_names = TRUE)
+stormdata %>% select(EVTYPE, STATE__, BGN_DATE, COUNTYNAME, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP) -> storm_health_cost
+    
+```
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
