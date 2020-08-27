@@ -36,6 +36,26 @@ output: html_notebook
     if (!getwd() == "C:/Users/paulr/Documents/R/Coursera_ReproducibleResearch/RepData_PeerAssessment2") {setwd("C:/Users/paulr/Documents/R/Coursera_ReproducibleResearch/RepData_PeerAssessment2")}
 ```
 
+# Get data
+# Set proper working Dir
+if (!getwd() == "C:/Users/paulr/Documents/R/GettingAndCleaningData") {setwd("./GettingAndCleaningData")}
+getwd()
+
+# Check for data directory and if one is not present then make it
+if (!file.exists("data")) {
+  dir.create("data")
+}
+
+# Download data using a URL into th data directory
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv"
+download.file(fileUrl, destfile = "./data/AmericanConsumer")
+dateDownloaded <- date()
+dateDownloaded
+list.files("./data")
+
+ 
+ 
+ 
  
 # Read data 
 
