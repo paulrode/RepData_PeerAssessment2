@@ -42,15 +42,18 @@ output: html_notebook
 ```{r, echo=TRUE, results=FALSE, cache=TRUE}
 stormdata <- read_csv("./data/repdata_data_StormData.csv.bz2", col_names = TRUE)
 stormdata %>% select(EVTYPE, STATE__, BGN_DATE, COUNTYNAME, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP) -> storm_health_cost
+storm_health_cost$BGN_DATE <- date(mdy_hms(storm_health_cost$BGN_DATE))
     
 ```
 
 # Look at the data
 ```{r}
 
+storm_health_cost %>% summary()
+
 Events <- length(unique(storm_health_cost$EVTYPE)) 
-storm_health_cost %>% select(EVTYPE, FATALITIES, INJURIES) %>%
-  mutate(Health = FATALITIES + INJURIES) %>% group_by(EVTYPE) %>% 
+storm_health_cost %>% select(EVTYPE, BGN_DATE, FATALITIES, INJURIES) %>%
+  mutate(Health = FATALITIES + INJURIES) %>% group_by(EVTYPE,BGN_DATE) %>% 
   summarise(Health = sum(Health)) %>% arrange(desc(Health)) -> answer1
 
 (sum(storm_health_cost$FATALITIES) + sum(storm_health_cost$INJURIES))
