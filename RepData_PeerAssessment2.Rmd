@@ -69,9 +69,16 @@ storm_health_cost$BGN_DATE <- date(mdy_hms(storm_health_cost$BGN_DATE))
 # Look at the data
 ```{r}
 
-storm_health_cost %>% summary()
 
-Events <- length(unique(storm_health_cost$EVTYPE)) 
+
+length(unique(storm_health_cost$PROPDMGEXP )) 
+unique(storm_health_cost$PROPDMGEXP)
+
+storm_health_cost %>% filter(PROPDMGEXP == "?") -> answer2
+summary(answer2)
+answer2
+
+
 storm_health_cost %>% select(EVTYPE, BGN_DATE, FATALITIES, INJURIES) %>%
   mutate(Health = FATALITIES + INJURIES) %>% group_by(EVTYPE,BGN_DATE) %>% 
   summarise(Health = sum(Health)) %>% arrange(desc(Health)) -> answer1
@@ -79,7 +86,7 @@ storm_health_cost %>% select(EVTYPE, BGN_DATE, FATALITIES, INJURIES) %>%
 (sum(storm_health_cost$FATALITIES) + sum(storm_health_cost$INJURIES))
 glimpse(answer1)
 
-
+summary(storm_health_cost$PROPDMGEXP)
 ```
 Number of unique events: `r Events`
 
