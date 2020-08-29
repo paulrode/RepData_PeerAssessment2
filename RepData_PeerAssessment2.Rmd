@@ -32,8 +32,13 @@ output: html_notebook
   #Package for reading and writing to jpeg files
     library("jpeg")
 
-  # Set proper working Dir
-    if (!getwd() == "C:/Users/paulr/Documents/R/Coursera_ReproducibleResearch/RepData_PeerAssessment2") {setwd("C:/Users/paulr/Documents/R/Coursera_ReproducibleResearch/RepData_PeerAssessment2")}
+# Set proper working Dir
+if (!getwd() == "C:/Users/paulr/Documents/R/GettingAndCleaningData") {setwd("./GettingAndCleaningData")}
+
+# Check for data directory and if one is not present then make it
+if (!file.exists("data")) {
+  dir.create("data")
+}
 ```
 
 # Get data
@@ -59,7 +64,17 @@ list.files("./data")
  
 # Read data 
 
+Data is first aquired from the web and then placed into a data directory. FOllowing that I place the data into a dataframe and then take some looks to gage the size, and layout of the data before trimming it down to make more workable and set up a working file called "storm_health_cost". 
 ```{r, echo=TRUE, results=FALSE, cache=TRUE}
+
+# File to retreve from the internet: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
+# Download data using a URL into th data directory
+fileUrl <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+download.file(fileUrl, destfile = "./data/repdata_data_StormData.csv.bz2")
+dateDownloaded <- date()
+dateDownloaded
+list.files("./data")
+
 stormdata <- read_csv("./data/repdata_data_StormData.csv.bz2", col_names = TRUE)
 stormdata %>% select(EVTYPE, STATE__, BGN_DATE, COUNTYNAME, FATALITIES, INJURIES, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP) -> storm_health_cost
 storm_health_cost$BGN_DATE <- date(mdy_hms(storm_health_cost$BGN_DATE))
@@ -67,26 +82,37 @@ storm_health_cost$BGN_DATE <- date(mdy_hms(storm_health_cost$BGN_DATE))
 ```
 
 # Look at the data
+Becuase we have a ery large dataset I will remove the NA's. 
+Looking at the CROPDAMEXP there is no usful information there that is material so I am removing this feture from storm_health_life dataframe. 
 ```{r}
 
-
-
-length(unique(storm_health_cost$PROPDMGEXP )) 
-unique(storm_health_cost$PROPDMGEXP)
-
-storm_health_cost %>% filter(PROPDMGEXP == "?") -> answer2
-summary(answer2)
-answer2
+glimpse(storm_health_cost)
+str(storm_health_cost)
+head(storm_health_cost)
+tail(storm_health_cost)
+summary(storm_health_cost$CROPDMGEXP)
+storm_health_cost %>% select(-CROPDMGEXP) -> storm_health_cost
+#Look at date ranges
+summary(storm_health_cost$BGN_DATE)
+storm_health_cost %>% filter(BGN_DATE > ymd("2001-11-1")) -> storm_health_cost
 
 
 storm_health_cost %>% select(EVTYPE, BGN_DATE, FATALITIES, INJURIES) %>%
-  mutate(Health = FATALITIES + INJURIES) %>% group_by(EVTYPE,BGN_DATE) %>% 
-  summarise(Health = sum(Health)) %>% arrange(desc(Health)) -> answer1
+  mutate(Health = FATALITIES + INJURIES) %>% group_by(EVTYPE) %>% 
+  summarise(Health = sum(Health)) %>% arrange(desc(Health)) -> Health1
+glimpse(Health1)
 
-(sum(storm_health_cost$FATALITIES) + sum(storm_health_cost$INJURIES))
-glimpse(answer1)
 
+
+Propdmgexp_LU <-data.frame("PROPDMGEXP" = unique(storm_health_cost$PROPDMGEXP), "PropExp" = c(1000, 1000000, 1, 1000000000, 1000, 1, 1, 1, 1, 1, 1, 1, 1, 100, 1, 1, 1, 1, 1), stringsAsFactors = FALSE) 
+
+left_join(storm_health_cost, Propdmgexp_LU, by="PROPDMGEXP") %>% mutate(PropdmgTrue = PROPDMG * Propdmgexp_LU) -> storm_health_cost
+summary(storm_health_cost)
 summary(storm_health_cost$PROPDMGEXP)
+
+
+
+
 ```
 Number of unique events: `r Events`
 
