@@ -112,6 +112,7 @@ Tables and plots are provided showing the combination of health effects and cost
 ```{r, echo=TRUE, results=TRUE, cache=TRUE, include=TRUE}
 kable(ComparativeHealth, format = "html", align = 'llll', caption = "Comparitive Ranking in decreasing impact order by type" ) %>% kable_styling(bootstrap_options = "striped", full_width = F)
 
+
 Top10Events %>% ggplot(aes(x = EVTYPE, y = value, fill = Key)) +
   geom_col(position = "dodge") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
