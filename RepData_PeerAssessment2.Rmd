@@ -3,7 +3,8 @@ title: "R Notebook Reproducible Research Peer Assessment 2"
 output: html_notebook
 ---
 
-
+# Enviroment set up.
+Below are the libraries used for this session in R. 
 ```{r, echo=FALSE, results="hide", include=FALSE}
   # Enviroment 
   # Loading and preprocessing the data
@@ -41,9 +42,9 @@ if (!file.exists("data")) {
 }
 
 ```
-# Read data 
+# Data Processing  
 
-Data is first aquired from the web and then placed into a data directory. FOllowing that I place the data into a dataframe and then take some looks to gage the size, and layout of the data before trimming it down to make more workable and set up a working file called "storm_health_cost". 
+Data is first aquired from the web and then placed into a data directory. Following that I make a dataframe and then take some looks to gage size and layout before trimming down the columns for workability and set up a file called "storm_health_cost". The data is caputred directly from the website lined in the assigment page. 
 ```{r, echo=TRUE, results=FALSE, cache=TRUE, include=FALSE}
 
 # File to retreve from the internet: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2
@@ -60,48 +61,69 @@ storm_health_cost$BGN_DATE <- date(mdy_hms(storm_health_cost$BGN_DATE))
     
 ```
 
-# Look at the data
-Becuase we have a ery large dataset I will remove the NA's. 
-Looking at the CROPDAMEXP there is no usful information there that is material so I am removing this feture from storm_health_life dataframe. 
-```{r}
+# Data Transformations and Analysis
+Becuase we have a ery large dataset I will remove the NA's. I also filtered by date and selected the top 10 events by fatalities, injuries, and cost. 
+```{r, echo=TRUE, results=FALSE, cache=TRUE, include=TRUE}
 
+# Analysing the health impacts of storm events
 glimpse(storm_health_cost) -> storm_health_cost_structure
 #str(storm_health_cost)
 storm_health_cost %>% select(-CROPDMGEXP) -> storm_health_cost
 #Look at date ranges
-summary(storm_health_cost$BGN_DATE)
+#summary(storm_health_cost$BGN_DATE)
 storm_health_cost %>% filter(BGN_DATE > ymd("2001-11-1")) -> storm_health_cost
 
-
+# Make a summerized data frame for final plot and table results 
 storm_health_cost %>% select(EVTYPE, BGN_DATE, FATALITIES, INJURIES) %>%
-  mutate(Health = FATALITIES + INJURIES) %>% group_by(EVTYPE) %>% 
-  summarise(Fatalities = sum(FATALITIES), Injuries = sum(INJURIES), Health = sum(Health)) %>% arrange(desc(Health)) -> Health1
+  mutate(Both = FATALITIES + INJURIES) %>% group_by(EVTYPE) %>% 
+  summarise(Fatalities = sum(FATALITIES), Injuries = sum(INJURIES), Both = sum(Both)) %>% arrange(desc(Both)) -> Health1
 
-# Top 5 Events by Fatalities
+# Top Events by Fatalities
 Health1 %>% arrange(desc(Fatalities)) -> HealthFat
 
-
-# Top 5 Events by Injuries
+# Top Events by Injuries
 Health1 %>% arrange(desc(Injuries)) -> HealthInj
 
-# Top 5 Events by Both
-Health1 %>% arrange(desc(Health)) -> HealthBoth
+# Top Events by Both
+Health1 %>% arrange(desc(Both))  -> HealthBoth
+HealthBoth[1:10, ] ->Top10Events
+Top10Events %>% select(EVTYPE, Both, Fatalities, Injuries) %>%
+gather(Key, value, -EVTYPE) -> Top10Events
 
-ComparativeHealth <- data.frame(Rank = 1:5, Fatalities = HealthFat[1:5,1], Injuries = HealthInj[1:5,1], Both = HealthBoth[1:5, 1])
+ComparativeHealth <- data.frame('Rank' = 1:10, 'Fatalities' = HealthFat[1:10,1], 'Injuries' = HealthInj[1:10,1], Both = HealthBoth[1:10, 1])
+names(ComparativeHealth) <- c("Rank", "Fatalities", "Injuries", "Both")
 
-kable(ComparativeHealth)
+# Analysing the cost impacts of storm events
 
-Propdmgexp_LU <-data.frame("PROPDMGEXP" = unique(storm_health_cost$PROPDMGEXP), "PropExp" = c(1000, 1000000, 1, 1000000000, 1000, 1, 1, 1, 1, 1, 1, 1, 1, 100, 1, 1, 1, 1, 1), stringsAsFactors = FALSE) 
+Propdmgexp_LU <-data.frame("PROPDMGEXP" = unique(storm_health_cost$PROPDMGEXP), "PropExp" = c(1000, 1000000, 1, 1000000000, 1), stringsAsFactors = FALSE) 
 
-left_join(storm_health_cost, Propdmgexp_LU, by="PROPDMGEXP") %>% mutate(PropdmgTrue = PROPDMG * Propdmgexp_LU) -> storm_health_cost
-summary(storm_health_cost)
-summary(storm_health_cost$PROPDMGEXP)
-
-
+left_join(storm_health_cost, Propdmgexp_LU, by="PROPDMGEXP") %>% mutate( DmgCost = PROPDMG * PropExp) %>% select(EVTYPE, DmgCost) %>% group_by(EVTYPE) %>% summarise(Cost = sum(DmgCost)) %>% arrange(desc(Cost)) %>% transmute(EVTYPE, Cost_x_B = Cost/1000000000) ->  ComparativeCost
+ComparativeCost <- ComparativeCost[1:10,]
+ComparativeCost$Cost_x_B <- round(ComparativeCost$Cost_x_B)
 
 
 ```
-Number of unique events: `r Events`
+
+
+# Results 
+Tables and plots are provided showing the combination of health effects and cost do demonstrate what the worse grouping of evenats are. 
+```{r, echo=TRUE, results=TRUE, cache=TRUE, include=TRUE}
+kable(ComparativeHealth, format = "html", align = 'llll', caption = "Comparitive Ranking in decreasing impact order by type" ) %>% kable_styling(bootstrap_options = "striped", full_width = F)
+
+Top10Events %>% ggplot(aes(x = EVTYPE, y = value, fill = Key)) +
+  geom_col(position = "dodge") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(title = "Comparitive of Events by fatalities and injuries", y="Counts", x="Events")
+  
+kable(ComparativeCost, format = "html", align = 'll', caption = "Comparitive Ranking in decreasing impact order by Cost" ) %>% kable_styling(bootstrap_options = "striped", full_width = F)
+
+ComparativeCost %>% ggplot(aes(x = EVTYPE, y = Cost_x_B)) +
+  geom_col(fill="blue") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(title = "Comparision by Cost", y="Costs", x="Events")
+```
+
+
 
 
 
